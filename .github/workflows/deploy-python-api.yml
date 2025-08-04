@@ -1,0 +1,135 @@
+name: Deploy Python API
+
+on:
+  workflow_call:
+    inputs:
+      app_name:
+        description: 'Application name (used for service name and directories)'
+        required: true
+        type: string
+      repo_name:
+        description: 'Repository name (e.g., breathman/ankichat)'
+        required: true
+        type: string
+      branch:
+        description: 'Branch to deploy'
+        required: false
+        default: 'main'
+        type: string
+      environment:
+        description: 'Environment to deploy to'
+        required: true
+        type: string
+      python_version:
+        description: 'Python version to use'
+        required: false
+        default: '3.9'
+        type: string
+      app_directory:
+        description: 'Application directory on server'
+        required: true
+        type: string
+    secrets:
+      DEPLOY_KEY:
+        description: 'SSH private key for deployment'
+        required: true
+      SERVER_HOST:
+        description: 'Server hostname or IP'
+        required: true
+      SERVER_USER:
+        description: 'Server username'
+        required: true
+      ENV_VARS:
+        description: 'Environment variables as JSON'
+        required: false
+
+env:
+  APP_NAME: ${{ inputs.app_name }}
+  REPO_NAME: ${{ inputs.repo_name }}
+  BRANCH: ${{ inputs.branch }}
+  ENVIRONMENT: ${{ inputs.environment }}
+  PYTHON_VERSION: ${{ inputs.python_version }}
+  APP_DIR: ${{ inputs.app_directory }}
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repo_name }}
+        ref: ${{ inputs.branch }}
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ inputs.python_version }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ hashFiles('**/requirements.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-
+    
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+    
+    - name: Run code quality checks
+      run: |
+        if [ -f "pyproject.toml" ]; then
+          black --check .
+          isort --check-only .
+          flake8 src tests
+          mypy src/
+        else
+          echo "Skipping quality checks - no pyproject.toml found"
+        fi
+    
+    - name: Run tests
+      run: |
+        if [ -f "pytest.ini" ] || [ -f "pyproject.toml" ]; then
+          pytest --cov=src --cov-report=term-missing
+        else
+          echo "Skipping tests - no pytest configuration found"
+        fi
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    environment: ${{ inputs.environment }}
+    
+    steps:
+    - name: Checkout deployment scripts
+      uses: actions/checkout@v4
+    
+    - name: Setup SSH key
+      uses: webfactory/ssh-agent@v0.7.0
+      with:
+        ssh-private-key: ${{ secrets.DEPLOY_KEY }}
+    
+    - name: Add server to known hosts
+      run: |
+        ssh-keyscan -H ${{ secrets.SERVER_HOST }} >> ~/.ssh/known_hosts
+    
+    - name: Deploy to server
+      run: |
+        echo "Deploying ${{ inputs.app_name }} to ${{ inputs.environment }}"
+        ./scripts/deploy-python-api.sh
+      env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
+        ENV_VARS: ${{ secrets.ENV_VARS }}
+    
+    - name: Run health check
+      run: |
+        ./scripts/health-check.sh ${{ inputs.environment }} ${{ inputs.app_name }}
+    
+    - name: Notify deployment status
+      run: |
+        echo "✅ ${{ inputs.app_name }} deployed successfully to ${{ inputs.environment }}"
