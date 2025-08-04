@@ -23,7 +23,7 @@ on:
       python_version:
         description: 'Python version to use'
         required: false
-        default: '3.9'
+        default: '3.12'
         type: string
       app_directory:
         description: 'Application directory on server'
@@ -39,9 +39,6 @@ on:
       SERVER_USER:
         description: 'Server username'
         required: true
-      ENV_VARS:
-        description: 'Environment variables as JSON'
-        required: false
 
 env:
   APP_NAME: ${{ inputs.app_name }}
@@ -124,7 +121,6 @@ jobs:
       env:
         SERVER_HOST: ${{ secrets.SERVER_HOST }}
         SERVER_USER: ${{ secrets.SERVER_USER }}
-        ENV_VARS: ${{ secrets.ENV_VARS }}
     
     - name: Run health check
       run: |

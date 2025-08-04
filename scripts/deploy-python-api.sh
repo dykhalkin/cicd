@@ -18,7 +18,6 @@ set -u  # Treat unset variables as an error when substituting
 
 # Optional Environment Variables
 PYTHON_VERSION="${PYTHON_VERSION:-3.9}"
-ENV_VARS="${ENV_VARS:-{}}"
 
 # Derived Configuration
 VENV_DIR="$APP_DIR/.venv"
@@ -88,20 +87,15 @@ remote_exec "cd $APP_DIR && $VENV_DIR/bin/pip install -r requirements.txt"
 
 # Create .env file from environment variables
 log "Configuring environment variables"
-if [ "$ENV_VARS" != "{}" ]; then
-    # Parse JSON and create .env file
-    echo "$ENV_VARS" | remote_exec "python3 -c '
-import json
-import sys
-env_vars = json.load(sys.stdin)
-with open(\"$APP_DIR/.env\", \"w\") as f:
-    for key, value in env_vars.items():
-        f.write(f\"{key}={value}\\n\")
-'"
-    log "Environment variables configured"
-else
-    warning "No environment variables provided. You may need to configure .env manually."
-fi
+# Export all environment variables starting with APP_ to .env file
+env | grep '^APP_' | remote_exec "cat > $APP_DIR/.env" || true
+# Also add any other environment variables that are commonly needed
+for var in DATABASE_URL API_KEY LOG_LEVEL PORT HOST DEBUG; do
+    if [ -n "${!var:-}" ]; then
+        echo "$var=${!var}" | remote_exec "cat >> $APP_DIR/.env"
+    fi
+done
+log "Environment variables configured from environment"
 
 # Create systemd service file
 log "Creating systemd service file"

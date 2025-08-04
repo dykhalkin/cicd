@@ -93,7 +93,6 @@ jobs:
       DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
       SERVER_HOST: ${{ secrets.STAGING_SERVER_HOST }}
       SERVER_USER: ${{ secrets.STAGING_SERVER_USER }}
-      ENV_VARS: ${{ secrets.STAGING_ENV_VARS }}
 
   deploy-production:
     if: github.event.inputs.environment == 'production'
@@ -110,7 +109,6 @@ jobs:
       DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
       SERVER_HOST: ${{ secrets.PRODUCTION_SERVER_HOST }}
       SERVER_USER: ${{ secrets.PRODUCTION_SERVER_USER }}
-      ENV_VARS: ${{ secrets.PRODUCTION_ENV_VARS }}
 ```
 
 Replace `[APP_NAME]` with the application name and `[OWNER/REPO_NAME]` with the repository path.
@@ -129,12 +127,13 @@ Provide these instructions to the user for configuring GitHub repository secrets
 - `STAGING_DEPLOY_KEY` / `PRODUCTION_DEPLOY_KEY` - SSH private key for server access
 - `STAGING_SERVER_HOST` / `PRODUCTION_SERVER_HOST` - Server IP or hostname
 - `STAGING_SERVER_USER` / `PRODUCTION_SERVER_USER` - SSH username
-- `STAGING_ENV_VARS` / `PRODUCTION_ENV_VARS` - JSON string with environment variables
 
-**ENV_VARS Example**:
-```json
-{"API_KEY": "value", "DATABASE_URL": "postgresql://...", "LOG_LEVEL": "INFO"}
-```
+**Environment Variables Configuration**:
+The deployment script automatically creates a `.env` file on the target server using:
+1. All environment variables starting with `APP_` prefix
+2. Common application variables: `DATABASE_URL`, `API_KEY`, `LOG_LEVEL`, `PORT`, `HOST`, `DEBUG`
+
+Set these as environment variables in your GitHub Actions workflow or repository environment settings.
 
 ### 4. Common Deployment Tasks for AI Agents
 

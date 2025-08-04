@@ -188,14 +188,3 @@ You can customize the deployment by:
 
 1. **Modifying the reusable workflow**: Edit `.github/workflows/deploy-python-api.yml`
 2. **Customizing deployment script**: Edit `scripts/deploy-python-api.sh` (includes systemd service configuration)
-
-## Example: AnkiChat Deployment
-
-See `ankichat-deploy.yml` for a complete example of how to use this scaffolding to deploy the AnkiChat application.
-
-## Troubleshooting
-
-1. **Service fails to start**: Check logs with `sudo journalctl -u {service_name} -f`
-2. **Permission issues**: Ensure proper ownership with `chown -R www-data:www-data`
-3. **Python dependencies**: Verify requirements.txt and Python version compatibility
-4. **Environment variables**: Check .env file format and values
