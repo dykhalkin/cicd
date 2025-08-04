@@ -89,6 +89,8 @@ jobs:
       environment: staging
       python_version: '3.9'
       app_directory: /opt/[APP_NAME]-staging
+      skip_tests: false
+      skip_quality_checks: false
     secrets:
       DEPLOY_KEY: ${{ secrets.STAGING_DEPLOY_KEY }}
       SERVER_HOST: ${{ secrets.STAGING_SERVER_HOST }}
@@ -105,6 +107,8 @@ jobs:
       environment: production
       python_version: '3.9'
       app_directory: /opt/[APP_NAME]-production
+      skip_tests: false
+      skip_quality_checks: false
     secrets:
       DEPLOY_KEY: ${{ secrets.PRODUCTION_DEPLOY_KEY }}
       SERVER_HOST: ${{ secrets.PRODUCTION_SERVER_HOST }}
@@ -134,6 +138,17 @@ The deployment script automatically creates a `.env` file on the target server u
 2. Common application variables: `DATABASE_URL`, `API_KEY`, `LOG_LEVEL`, `PORT`, `HOST`, `DEBUG`
 
 Set these as environment variables in your GitHub Actions workflow or repository environment settings.
+
+**Optional Parameters**:
+- `skip_tests: true` - Skip running pytest tests (useful for quick deployments)
+- `skip_quality_checks: true` - Skip code quality checks (black, isort, etc.)
+- `python_version` - Specify Python version (default: '3.12')
+
+**Quick Deployment Example** (skip tests and quality checks):
+```yaml
+skip_tests: true
+skip_quality_checks: true
+```
 
 ### 4. Common Deployment Tasks for AI Agents
 
