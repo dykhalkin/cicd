@@ -119,6 +119,9 @@ jobs:
     steps:
     - name: Checkout deployment scripts
       uses: actions/checkout@v4
+      with:
+        repository: dykhalkin/cicd
+        path: cicd
     
     - name: Setup SSH key
       uses: webfactory/ssh-agent@v0.7.0
@@ -132,14 +135,16 @@ jobs:
     - name: Deploy to server
       run: |
         echo "Deploying ${{ inputs.app_name }} to ${{ inputs.environment }}"
-        ./scripts/deploy-python-api.sh
+        chmod +x cicd/scripts/deploy-python-api.sh
+        ./cicd/scripts/deploy-python-api.sh
       env:
         SERVER_HOST: ${{ secrets.SERVER_HOST }}
         SERVER_USER: ${{ secrets.SERVER_USER }}
     
     - name: Run health check
       run: |
-        ./scripts/health-check.sh ${{ inputs.environment }} ${{ inputs.app_name }}
+        chmod +x cicd/scripts/health-check.sh
+        ./cicd/scripts/health-check.sh ${{ inputs.environment }} ${{ inputs.app_name }}
     
     - name: Notify deployment status
       run: |
