@@ -109,6 +109,9 @@ for var in DATABASE_URL API_KEY HOST PORT ROOT_PATH LOG_LEVEL PORT HOST DEBUG; d
         echo "$var=${!var}" | remote_exec "cat >> $APP_DIR/.env"
     fi
 done
+
+log "Configured environment file (.env) contents:"
+remote_exec "cat $APP_DIR/.env"
 log "Environment variables configured from environment"
 
 # Create systemd service file

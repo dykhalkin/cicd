@@ -147,6 +147,13 @@ jobs:
       env:
         SERVER_HOST: ${{ secrets.SERVER_HOST }}
         SERVER_USER: ${{ secrets.SERVER_USER }}
+        # Inherit all environment variables from GitHub Environment
+        DATABASE_URL: ${{ vars.DATABASE_URL }}
+        HOST: ${{ vars.HOST }}
+        PORT: ${{ vars.PORT }}
+        ROOT_PATH: ${{ vars.ROOT_PATH }}
+        DEBUG: ${{ vars.DEBUG }}
+        LOG_LEVEL: ${{ vars.LOG_LEVEL }}
     
     - name: Run health check
       run: |
