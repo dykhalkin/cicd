@@ -152,6 +152,9 @@ jobs:
       run: |
         chmod +x cicd/scripts/health-check.sh
         ./cicd/scripts/health-check.sh ${{ inputs.environment }} ${{ inputs.app_name }}
+      env:
+        SERVER_HOST: ${{ secrets.SERVER_HOST }}
+        SERVER_USER: ${{ secrets.SERVER_USER }}
     
     - name: Notify deployment status
       run: |
