@@ -23,8 +23,8 @@ PYTHON_VERSION="${PYTHON_VERSION:-3.9}"
 VENV_DIR="$APP_DIR/.venv"
 SERVICE_NAME="${APP_NAME}-${ENVIRONMENT}.service"
 SERVICE_FILE="/etc/systemd/system/$SERVICE_NAME"
-REPO_URL="https://github.com/${REPO_NAME}.git"
 LOG_DIR="/var/log/${APP_NAME}-${ENVIRONMENT}"
+SOURCE_DIR="${SOURCE_DIR:-src}"
 
 # Colors for output
 GREEN='\033[0;32m'
@@ -66,15 +66,29 @@ log "Creating application directory structure"
 remote_exec "sudo mkdir -p $APP_DIR $LOG_DIR"
 remote_exec "sudo chown -R $SERVER_USER:$SERVER_USER $APP_DIR"
 
-# Clone or update repository
-log "Updating application code"
-if remote_exec "[ -d $APP_DIR/.git ]"; then
-    log "Updating existing repository"
-    remote_exec "cd $APP_DIR && git fetch origin && git checkout $BRANCH && git pull origin $BRANCH"
-else
-    log "Cloning repository"
-    remote_exec "git clone -b $BRANCH $REPO_URL $APP_DIR"
+# Copy application code using scp
+log "Copying application code via scp"
+if [ ! -d "$SOURCE_DIR" ]; then
+    error "Source directory '$SOURCE_DIR' not found. Make sure source code is checked out."
 fi
+
+# Create a temporary tarball to transfer files efficiently
+TEMP_TAR="/tmp/${APP_NAME}-${ENVIRONMENT}-$(date +%s).tar.gz"
+log "Creating tarball of source code"
+tar -czf "$TEMP_TAR" -C "$SOURCE_DIR" .
+
+# Copy tarball to server and extract
+log "Transferring code to server"
+remote_copy "$TEMP_TAR" "/tmp/"
+REMOTE_TAR="/tmp/$(basename $TEMP_TAR)"
+
+# Extract code on remote server
+remote_exec "sudo mkdir -p $APP_DIR && sudo rm -rf $APP_DIR/* && sudo tar -xzf $REMOTE_TAR -C $APP_DIR"
+remote_exec "sudo rm -f $REMOTE_TAR"
+
+# Clean up local tarball
+rm -f "$TEMP_TAR"
+log "Application code transferred successfully"
 
 # Setup Python virtual environment
 log "Setting up Python virtual environment"

@@ -17,11 +17,11 @@ This is a CI/CD scaffolding repository that provides reusable GitHub Actions wor
    - Performs health checks post-deployment
 
 2. **Deployment Script** (`scripts/deploy-python-api.sh`)
-   - SSH-based deployment that clones/updates application code on target servers
+   - SSH-based deployment that transfers application code via scp (no git required on server)
    - Creates Python virtual environments and installs dependencies
    - Generates systemd service files dynamically
    - Manages service lifecycle (stop, start, enable)
-   - Configures environment variables from JSON input
+   - Configures environment variables from environment
 
 3. **Health Check Script** (`scripts/health-check.sh`)
    - Verifies systemd service status
@@ -31,7 +31,7 @@ This is a CI/CD scaffolding repository that provides reusable GitHub Actions wor
 ### Deployment Flow
 
 1. **Test Phase**: Code quality checks (black, isort, flake8, mypy) and pytest execution
-2. **Deploy Phase**: SSH to target server, update code, configure service, restart
+2. **Deploy Phase**: Checkout source code, transfer via scp to target server, configure service, restart
 3. **Verify Phase**: Health checks and service status validation
 
 ### Service Architecture on Target Servers
@@ -49,7 +49,8 @@ Each deployed application follows this pattern:
 The deployment script requires these environment variables:
 - `APP_NAME`, `REPO_NAME`, `BRANCH`, `ENVIRONMENT`, `APP_DIR`
 - `SERVER_HOST`, `SERVER_USER` (for SSH access)
-- `ENV_VARS` (JSON string containing application environment variables)
+- `SOURCE_DIR` (local directory containing source code, default: 'src')
+- Application environment variables (prefixed with `APP_` or common variables)
 
 ## Usage Pattern for AI Agents
 

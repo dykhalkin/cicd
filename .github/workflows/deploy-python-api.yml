@@ -123,6 +123,13 @@ jobs:
         repository: dykhalkin/cicd
         path: cicd
     
+    - name: Checkout source code
+      uses: actions/checkout@v4
+      with:
+        repository: ${{ inputs.repo_name }}
+        ref: ${{ inputs.branch }}
+        path: src
+    
     - name: Setup SSH key
       uses: webfactory/ssh-agent@v0.7.0
       with:
