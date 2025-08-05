@@ -104,7 +104,7 @@ log "Configuring environment variables"
 # Export all environment variables starting with APP_ to .env file
 env | grep '^APP_' | remote_exec "cat > $APP_DIR/.env" || true
 # Also add any other environment variables that are commonly needed
-for var in DATABASE_URL API_KEY LOG_LEVEL PORT HOST DEBUG; do
+for var in DATABASE_URL API_KEY HOST PORT ROOT_PATH LOG_LEVEL PORT HOST DEBUG; do
     if [ -n "${!var:-}" ]; then
         echo "$var=${!var}" | remote_exec "cat >> $APP_DIR/.env"
     fi
